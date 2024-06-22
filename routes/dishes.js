@@ -15,13 +15,13 @@ const dishesRoutes = (db) => {
     
     router.put('/dishes/:id', (req, res) => {
         const { id } = req.params;
-        const { name, price, description, section_id } = req.body;
-        handleQuery(db)(res, 'UPDATE Dishes SET name = ?, price = ?, description = ?, section_id = ? WHERE id = ?', [name, price, description, section_id, id]);
+        const { name, price, description } = req.body;
+        handleQuery(db)(res, 'UPDATE Dishes SET name = ?, price = ?, description = ? WHERE ID = ?', [name, price, description, id]);
     });
     
     router.delete('/dishes/:id', (req, res) => {
         const { id } = req.params;
-        handleQuery(db)(res, 'DELETE FROM Dishes WHERE id = ?', [id]);
+        handleQuery(db)(res, 'DELETE FROM Dishes WHERE ID = ?', [id]);
     });
 
     return router

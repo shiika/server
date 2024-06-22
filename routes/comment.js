@@ -12,7 +12,7 @@ const commentRoutes = (db) => {
             res.status(200).json(results);
         })
     });
-    router.post("/comments/:id", (req, res) => {
+    router.get("/comments/:id", (req, res) => {
         const token = req.header("authorization");
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const personId = decoded.user.personId;
@@ -39,7 +39,7 @@ const commentRoutes = (db) => {
         const token = req.header("authorization");
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const personId = decoded.user.personId;
-        db.query(`SELECT ID FROM User WHERE user_id = ?`, [personId], (err,results) => {
+        db.query(`SELECT ID FROM User WHERE ID = ?`, [personId], (err,results) => {
             if (err) {
                 res.status(500).json(err);
                 return;

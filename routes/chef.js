@@ -48,7 +48,64 @@ const chefRoutes = (db) => {
             })
             res.status(200).json(results);
         })
-      })
+    });
+
+    router.get("/chefs/:id", (req, res) => {
+        const id = req.params.id;
+        db.query(`SELECT * FROM User U
+JOIN Chef C
+ON U.ID = C.user_id AND U.role = 'Chef'
+WHERE U.ID = ?`, [id], (err, results) => {
+            if (err) {
+                res.status(500).json({msg: "seomthin"});
+                return;
+            }
+            if (results) {
+                const chefs = results.map(item => {
+                    item.name = `${item.first_name} ${item.last_name}`;
+                    item.phone = item.phone_number;
+                    if (item.image) item.image = item.image.toString("base64");
+                    if (item.CV) item.CV = item.CV.toString("base64");
+                })
+                res.status(200).json(results);
+            }
+        })
+    })
+    router.get("/chefs", (req, res) => {
+        db.query(`SELECT * FROM User U
+JOIN Chef C
+ON U.ID = C.user_id AND U.role = 'Chef'`, (err, results) => {
+            if (err) {
+                res.status(500).json({msg: "seomthin"});
+                return;
+            }
+            if (results) {
+                const chefs = results.map(item => {
+                    item.name = `${item.first_name} ${item.last_name}`;
+                    item.phone = item.phone_number;
+                    if (item.image) item.image = item.image.toString("base64");
+                    if (item.CV) item.CV = item.CV.toString("base64");
+                })
+                res.status(200).json(results);
+            }
+        })
+    })
+
+    router.delete("/chefs/:id", (req, res) => {
+        const id = req.params.id;
+        const token = req.header("authorization");
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const personId = decoded.user.personId;
+        db.query("SET FOREIGN_KEY_CHECKS = 0", (err, results) => {
+            db.query("DELETE FROM Chef WHERE ID = ?", [id], (err, results) => {
+                db.query("DELETE FROM User WHERE ID = ?", [personId], (err, results) => {
+                    db.query("SET FOREIGN_KEY_CHECKS = 1", (err, results) => {
+                        res.status(200).json("Chef has been removed")
+                    })
+                })
+            })
+        })
+    })
     return router
 }
 

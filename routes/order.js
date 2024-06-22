@@ -7,15 +7,128 @@ const jwt = require('jsonwebtoken');
 const orderRoutes = (db) => {
     // Orders CRUD
     router.get('/orders', (req, res) => {
-        handleQuery(res, 'SELECT * FROM Orders');
+        db.query("SELECT * FROM Orders", (err, results) => {
+            res.status(200).json(results);
+        })
     });
+
+    router.get("/admin-completed-orders", (req, res) => {
+        db.query(`SELECT 
+    U.first_name AS chef_first_name,
+    U.last_name AS chef_last_name,
+    pay.total_cost AS total_cost,
+    o.delivery_time AS delivery_time,
+    c.content AS comment_content,
+    o.ID AS OrderID,
+    o.status AS status,
+    GROUP_CONCAT(DISTINCT d.name ORDER BY d.name ASC) AS dishes
+FROM 
+    Orders o
+JOIN 
+    Chef ch ON o.chef_id = ch.ID
+JOIN 
+    User U ON ch.user_id = U.ID
+JOIN 
+    Payment pay ON o.ID = pay.order_id
+LEFT JOIN 
+    Comment c ON o.ID = c.orders_id
+JOIN 
+    Orders_Dishes od ON o.ID = od.orders_id
+JOIN 
+    Dishes d ON od.dishes_id = d.ID
+WHERE o.status = "Completed"
+GROUP BY 
+    o.ID, U.first_name, pay.total_cost, o.delivery_time, c.content;`, (err, results) => {
+                if (results?.length) {
+                    res.status(200).json(results);
+                }
+            })
+    });
+    router.get("/chef-orders/:id", (req, res) => {
+        const id = req.params.id;
+        db.query(`
+                SELECT 
+    U.first_name AS chef_first_name,
+    U.last_name AS chef_last_name,
+    pay.total_cost AS total_cost,
+    o.delivery_time AS delivery_time,
+    c.content AS comment_content,
+    o.ID AS OrderID,
+    o.status AS status,
+    GROUP_CONCAT(DISTINCT d.name ORDER BY d.name ASC) AS dishes
+FROM 
+    Orders o
+JOIN 
+    Chef ch ON o.chef_id = ch.ID
+JOIN 
+    User U ON ch.user_id = U.ID
+JOIN 
+    Payment pay ON o.ID = pay.order_id
+LEFT JOIN 
+    Comment c ON o.ID = c.orders_id
+JOIN 
+    Orders_Dishes od ON o.ID = od.orders_id
+JOIN 
+    Dishes d ON od.dishes_id = d.ID
+WHERE ch.ID = ?
+GROUP BY 
+    o.ID, U.first_name, pay.total_cost, o.delivery_time, c.content;`, [id], (err, results) => {
+                if (results?.length) {
+                    res.status(200).json(results);
+                }
+            })
+    })
+    router.get("/admin-orders", (req, res) => {
+        db.query(`
+                SELECT 
+    U.first_name AS chef_first_name,
+    U.last_name AS chef_last_name,
+    pay.total_cost AS total_cost,
+    o.delivery_time AS delivery_time,
+    c.content AS comment_content,
+    o.ID AS OrderID,
+    o.status AS status,
+    GROUP_CONCAT(DISTINCT d.name ORDER BY d.name ASC) AS dishes
+FROM 
+    Orders o
+JOIN 
+    Chef ch ON o.chef_id = ch.ID
+JOIN 
+    User U ON ch.user_id = U.ID
+JOIN 
+    Payment pay ON o.ID = pay.order_id
+LEFT JOIN 
+    Comment c ON o.ID = c.orders_id
+JOIN 
+    Orders_Dishes od ON o.ID = od.orders_id
+JOIN 
+    Dishes d ON od.dishes_id = d.ID
+GROUP BY 
+    o.ID, U.first_name, pay.total_cost, o.delivery_time, c.content;
+            `, (err, results) => {
+                if (results?.length) {
+                    res.status(200).json(results);
+                }
+            })
+    })
+
+    router.put("/admin-orders/:id", (req, res) => {
+        const id = req.params.id;
+        const status = req.body.status;
+        db.query(`UPDATE Orders SET status = ? WHERE ID = ?`, [status, id], (err, results) => {
+            res.status(200).json(results);
+        })
+    })
     
     router.post('/orders', (req, res) => {
         const {dishes, deliveryTime, address} = req.body;
+        const token = req.header("authorization");
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const userId = decoded.user.personId;
         // Create a comma-separated list of placeholders (e.g., ?, ?, ?)
-        const query = `INSERT INTO Orders (status, delivery_time, address) VALUES (?, ?, ?)`;
+        const query = `INSERT INTO Orders (status, delivery_time, address, user_id) VALUES (?, ?, ?, ?)`;
         const dishesIds = dishes.join(',');
-        db.query(query, [OrderStatusMap.get("PENDING"), deliveryTime, address], async (err, results) => {
+        db.query(query, [OrderStatusMap.get("PENDING"), deliveryTime, address, userId], async (err, results) => {
             if (err) {
                 res.json({err});
                 return

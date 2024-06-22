@@ -8,7 +8,15 @@ const jwt = require('jsonwebtoken');
 const customerRoutes = (db) => {
     // Customer CRUD
     router.get('/customer', (req, res) => {
-        handleQuery(db)(res, 'SELECT * FROM User');
+        handleQuery(db)(res, 'SELECT * FROM User WHERE role = "Customer"');
+    });
+
+    router.delete('/customer/:id', (req, res) => {
+        const id = +req.params.id;
+        db.query("SET FOREIGN_KEY_CHECKS = 0", (err, results) => {
+            handleQuery(db)(res, 'DELETE FROM User WHERE ID = ?', [id]);
+            db.query("SET FOREIGN_KEY_CHECKS = 1");
+        })
     });
 
     router.post('/customer-pay', (req, res) => {
@@ -55,11 +63,6 @@ const customerRoutes = (db) => {
         const { id } = req.params;
         const { role } = req.body;
         handleQuery(db)(res, 'UPDATE Sections SET role = ? WHERE id = ?', [role, id]);
-    });
-    
-    router.delete('/customer/:id', (req, res) => {
-        const { id } = req.params;
-        handleQuery(db)(res, 'DELETE FROM Sections WHERE id = ?', [id]);
     });
 
     return router

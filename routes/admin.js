@@ -34,7 +34,7 @@ const adminRoutes = (db) => {
         })
     });
     
-    router.delete('/customer/:id', (req, res) => {
+    router.delete('/admin/:id', (req, res) => {
         const { id } = req.params;
         db.query('DELETE FROM Users WHERE ID = ?', [id], (err, results) => {
             if (err) {
@@ -45,7 +45,7 @@ const adminRoutes = (db) => {
         })
     });
 
-    router.put("/customer/:id", (req, res) => {
+    router.put("/admin/:id", (req, res) => {
         const { id } = req.params;
         const {email, phone, address} = req.body;
         db.query('UPDATE Users SET email = ?, phone_number = ?, address = ? WHERE ID = ?', [email, phone, address, id], (err, results) => {

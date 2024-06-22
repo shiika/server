@@ -29,7 +29,7 @@ const authRoutes = (db) => {
     db.query('SELECT * FROM User WHERE email = ?', [email], async (err, results) => {
       if (err) throw err;
       if (results.length > 0) {
-        return res.status(400).json({ msg: 'User already exists', status: res.statusCode });
+        return res.status(200).json({ msg: 'User already exists', status: res.statusCode });
       }
 
       // Create new user
@@ -53,12 +53,12 @@ const authRoutes = (db) => {
             if (PersonRole === PersonEnum.get("CHEF")) {
               if (results?.insertId) {
                 const userId = results?.insertId;
-                db.query(`INSERT INTO Chef (social_media_platforms, description, user_id) VALUES (?, ?, ?)`, [socialMediaPlatform, description, userId], (err, results) => {
+                db.query(`INSERT INTO Chef (social_media_platforms, description, user_id) VALUES (?, ?, ?)`, [socialMediaPlatform, description, userId], (err, chefResults) => {
                   if (err) {
                     res.json(err);
                     return
                   }
-                  res.status(200).json({ msg: 'User registered' })
+                  res.status(200).json({ msg: 'User registered', chefId: chefResults.insertId })
                 })
               }
             } else res.status(200).json({ msg: 'User registered' });

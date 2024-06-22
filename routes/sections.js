@@ -22,13 +22,20 @@ const sectionsRoutes = (db) => {
                 }
                 if (results?.length) {
                     const chefId = results[0].ID;
-                    db.query(`INSERT INTO Menu (chef_id) VALUES(?)`, [chefId], (err, results) => {
-                        if (err) {
-                            res.status(500).json(err);
-                            return;
-                        }
-                        if (results?.insertId) {
-                            handleQuery(db)(res, 'INSERT INTO Sections (role, menu_id) VALUES (?, ?)', [role, results?.insertId]);
+                    db.query(`SELECT * FROM Menu WHERE chef_id = ?`, [chefId], (err, results) => {
+                        if (!results?.length) {
+                            db.query(`INSERT INTO Menu (chef_id) VALUES(?)`, [chefId], (err, results) => {
+                                if (err) {
+                                    res.status(500).json(err);
+                                    return;
+                                }
+                                if (results?.insertId) {
+                                    handleQuery(db)(res, 'INSERT INTO Sections (role, menu_id) VALUES (?, ?)', [role, results?.insertId]);
+                                }
+                            })
+                        } else {
+                            const menuId = results[0].ID;
+                            handleQuery(db)(res, 'INSERT INTO Sections (role, menu_id) VALUES (?, ?)', [role, menuId]);
                         }
                     })
                 } else {
@@ -39,6 +46,22 @@ const sectionsRoutes = (db) => {
             handleQuery(db)(res, 'INSERT INTO Sections (role, menu_id) VALUES (?, ?)', [role, menuId]);
         }
     });
+
+    router.get("/sections-dishes/:id", (req, res) => {
+        const chefId = req.params.id;
+        db.query(`SELECT *, D.ID as ID, S.ID as sectionId, M.ID as menuId FROM Dishes D
+JOIN Menu M
+JOIN Sections S
+ON D.section_id = S.ID AND M.chef_id = ?`,[chefId], (err, results) => {
+        results = results.map(
+            item => {
+                if (item.image) item.image = item.image.toString("base64");
+                return item
+            }
+        );
+        res.status(200).json(results)
+})
+    })
     
     router.put('/sections/:id', (req, res) => {
         const { id } = req.params;

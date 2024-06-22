@@ -35,7 +35,7 @@ JOIN
     Sections s ON m.ID = s.menu_id
 RIGHT JOIN 
     Dishes d ON s.ID = d.section_id
-WHERE c.ID = 1`, [menuId], (err, results) => {
+WHERE c.ID = ?`, [menuId], (err, results) => {
             if (err) {
                 res.status(500).json(err);
                 return;

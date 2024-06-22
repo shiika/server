@@ -26,7 +26,7 @@ app.use(cors())
 app.use(express.json());
 
 // Create dish image
-app.post('/api/dish-image', upload.single('image'), (req, res) => {
+app.post('/api/dish-image/:id', upload.single('image'), (req, res) => {
   const query = 'UPDATE Dishes SET image = ? WHERE ID = ?';
   db.query(query, [req.file.buffer, req.params.id], (err, results) => {
       if (err) {
@@ -73,8 +73,18 @@ app.post('/api/chef-cv/:id', upload.single('file'), (req, res) => {
 
 // Upload Chef image
 app.post('/api/chef-image/:id', upload.single('image'), (req, res) => {
-  console.log({param: req.params.id})
-  const query = 'UPDATE Chef SET image = ? WHERE ID = 1';
+  const query = 'UPDATE Chef SET image = ? WHERE ID = ?';
+  db.query(query, [req.file.buffer, req.params.id], (err, results) => {
+      if (err) {
+          console.error('Error inserting image into database: ', err);
+          return res.status(500).send('Error uploading image.');
+      }
+      res.send('Image uploaded successfully.');
+    });
+});
+
+app.post('/api/chef-receipt/:id', upload.single('file'), (req, res) => {
+  const query = 'UPDATE Chef SET payment_receipt = ? WHERE ID = ?';
   db.query(query, [req.file.buffer, req.params.id], (err, results) => {
       if (err) {
           console.error('Error inserting image into database: ', err);
