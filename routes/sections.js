@@ -6,7 +6,9 @@ const jwt = require("jsonwebtoken");
 const sectionsRoutes = (db) => {
     // Sections CRUD
     router.get('/sections', (req, res) => {
-        handleQuery(db)(res, 'SELECT * FROM Sections');
+        db.query(`SELECT * FROM Sections`, (err, results) => {
+            res.status(200).json(results);
+        })
     });
     
     router.post('/sections', (req, res) => {
