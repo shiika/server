@@ -144,6 +144,7 @@ const authRoutes = (db) => {
         },
       };
 
+      // for decrypting data
       jwt.sign(
         payload,
         process.env.JWT_SECRET,
