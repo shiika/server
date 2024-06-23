@@ -21,7 +21,9 @@ const dishesRoutes = (db) => {
     
     router.delete('/dishes/:id', (req, res) => {
         const { id } = req.params;
-        handleQuery(db)(res, 'DELETE FROM Dishes WHERE ID = ?', [id]);
+        db.query('DELETE FROM Dishes WHERE ID = ?', [id], (err, results) => {
+            res.json(results);
+        })
     });
 
     return router

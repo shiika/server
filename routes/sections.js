@@ -10,6 +10,14 @@ const sectionsRoutes = (db) => {
             res.status(200).json(results);
         })
     });
+    router.get('/sections/:id', (req, res) => {
+        const chefId = req.params.id;
+        db.query(`SELECT S.ID, S.role, S.menu_id FROM Sections S
+JOIN Menu M 
+ON M.ID = S.menu_id AND M.chef_id = ?;`, [chefId], (err, results) => {
+            res.status(200).json(results);
+        })
+    });
     
     router.post('/sections', (req, res) => {
         const token = req.header("authorization");
@@ -32,12 +40,21 @@ const sectionsRoutes = (db) => {
                                     return;
                                 }
                                 if (results?.insertId) {
-                                    handleQuery(db)(res, 'INSERT INTO Sections (role, menu_id) VALUES (?, ?)', [role, results?.insertId]);
+                                    db.query('INSERT INTO Sections (role, menu_id) VALUES (?, ?)', [role, results?.insertId], (err, results) => {
+                                        console.log("from here")
+                                        if (results?.insertId) res.status(200).json(results);
+                                        else res.status(200).json(results);
+                                    })
                                 }
+                                else res.status(200).json([]);
                             })
                         } else {
                             const menuId = results[0].ID;
-                            handleQuery(db)(res, 'INSERT INTO Sections (role, menu_id) VALUES (?, ?)', [role, menuId]);
+                            console.log({menuId})
+                            db.query('INSERT INTO Sections (role, menu_id) VALUES (?, ?)', [role, menuId], (err, results) => {
+                                if (results?.length) res.status(200).json(results);
+                                else res.status(200).json(results);
+                            })
                         }
                     })
                 } else {
@@ -45,16 +62,27 @@ const sectionsRoutes = (db) => {
                 }
             })
         } else {
-            handleQuery(db)(res, 'INSERT INTO Sections (role, menu_id) VALUES (?, ?)', [role, menuId]);
+            db.query('INSERT INTO Sections (role, menu_id) VALUES (?, ?)', [role, menuId], (err, results) => {
+                res.json(results);
+            })
         }
     });
 
     router.get("/sections-dishes/:id", (req, res) => {
         const chefId = req.params.id;
-        db.query(`SELECT *, D.ID as ID, S.ID as sectionId, M.ID as menuId FROM Dishes D
-JOIN Menu M
-JOIN Sections S
-ON D.section_id = S.ID AND M.chef_id = ?`,[chefId], (err, results) => {
+        db.query(`SELECT
+    Sections.ID AS sectionId,
+    Sections.role AS section_role,
+    Dishes.ID AS ID,
+    Dishes.name AS name,
+    Dishes.price AS price,
+    Dishes.description AS description,
+    Dishes.image AS image,
+    Menu.ID as menuId
+FROM
+    MyDatabase.Sections
+    JOIN MyDatabase.Menu ON Menu.ID = Sections.menu_id AND Menu.chef_id = ?
+    LEFT JOIN MyDatabase.Dishes ON Sections.ID = Dishes.section_id`,[chefId], (err, results) => {
         results = results.map(
             item => {
                 if (item.image) item.image = item.image.toString("base64");

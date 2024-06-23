@@ -75,7 +75,7 @@ GROUP BY
     o.ID, U.first_name, pay.total_cost, o.delivery_time, c.content;`, [id], (err, results) => {
                 if (results?.length) {
                     res.status(200).json(results);
-                }
+                } else res.status(200).json([]);
             })
     })
     router.get("/admin-orders", (req, res) => {
